@@ -1,0 +1,34 @@
+{
+  "name": "iot-front",
+  "version": "1.0.0",
+  "description": "IoT Frontend",
+  "main": "index.js",
+  "scripts": {
+    "test": "concurrently eslint . karma start --single-run --color'",
+    "run": "babel src --out-dir build --source-maps inline",
+    "clearbuild": "rm -rf build/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lehren/iot-front.git"
+  },
+  "keywords": [
+    "IoT",
+    "node"
+  ],
+  "author": "Loek Ehren",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lehren/iot-front/issues"
+  },
+  "homepage": "https://github.com/Lehren/iot-front#readme",
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0",
+    "babelify": "^7.3.0",
+    "browserify": "^14.1.0",
+    "concurrently": "^3.4.0",
+    "eslint": "^3.17.1",
+    "karma": "^1.5.0"
+  }
+}
