@@ -1,5 +1,6 @@
 const istanbul = require('browserify-istanbul');
 
+
 module.exports = config => {
   const configuration = {
     frameworks: [
@@ -12,6 +13,7 @@ module.exports = config => {
     browsers: [
       'Chrome'
     ],
+    transports: ['polling'],
     customLaunchers: {
       ChromeTravisCi: {
         base: 'Chrome',
