@@ -30,6 +30,7 @@
     "browserify-istanbul": "^2.0.0",
     "concurrently": "^3.4.0",
     "eslint": "^3.17.1",
+    "eslint-config-d-centralize": "^0.4.1",
     "isparta": "^4.0.0",
     "istanbul": "^0.4.5",
     "jasmine-core": "^2.5.2",
