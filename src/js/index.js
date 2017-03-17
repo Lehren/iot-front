@@ -34,6 +34,18 @@ function updateContainers() {
   return fillLevelHandler.getFillLevels()
     .then(fillLevel => fillLevel.map(v => {
       const bar = $(containerDict[v.id]);
+      let className;
+      if(v.fillLevel < 50){
+        className = "progress-bar-success";
+      }
+      else if(v.fillLevel >=50 && v.fillLevel <80){
+        className = "progress-bar-warning";
+      }
+      else if(v.fillLevel >=80){
+        className = "progress-bar-error";
+      }
+      bar.removeClass();
+      bar.addClass("progress-bar " + className);
       bar.attr('data-transitiongoal', v.fillLevel).progressbar({display_text: 'center'});
     }));
 }
