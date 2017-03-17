@@ -2,12 +2,38 @@
 @import '../../node_modules/bootstrap-toggle/css/bootstrap-toggle.min.css';
 @import '../../node_modules/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css';
 
-.container { margin-top: 10px; }
+body{
+  background-color: #8bc34a;
+}
+
+.container {
+  background-color: #FFFFFF;
+  border-radius: 10px;
+  padding-right: 10px;
+}
+
+.progress-row{
+  height: 100px;
+  padding: 10px;
+}
 
 .progress {
   min-width: 50px;
+  margin: 0 auto;
 }
 
 .vertical {
-  min-height: 50px;
+  height: 100%;
+}
+
+.navbar {
+  background-color: #33691e;
+}
+
+.navbar-brand {
+  padding: 0;
+}
+
+.navbar-brand>img {
+  height: 50px;
 }
