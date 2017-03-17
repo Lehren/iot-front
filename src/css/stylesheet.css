@@ -1,0 +1,13 @@
+@import '../../node_modules/bootstrap/dist/css/bootstrap.min.css';
+@import '../../node_modules/bootstrap-toggle/css/bootstrap-toggle.min.css';
+@import '../../node_modules/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css';
+
+.container { margin-top: 10px; }
+
+.progress {
+  min-width: 50px;
+}
+
+.vertical {
+  min-height: 50px;
+}
