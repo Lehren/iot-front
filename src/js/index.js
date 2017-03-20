@@ -10,7 +10,6 @@ const ProgressComponent = require('./components/progress-component');
 const conn = new iot.Connection(settings);
 const fillLevelHandler = new iot.FillLevelController(conn);
 const containerDict = {};
-
 document.addEventListener('DOMContentLoaded', () => {
   drawContainers();
   setInterval(updateContainers, 5000);
