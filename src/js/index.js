@@ -13,9 +13,7 @@ const containerDict = {};
 
 document.addEventListener('DOMContentLoaded', () => {
   drawContainers();
-
   setInterval(updateContainers, 5000);
-
 });
 
 function drawContainers() {
@@ -23,8 +21,7 @@ function drawContainers() {
     .then(fillLevel => fillLevel.map(v => {
       const containerClass = new ProgressComponent(v.id);
       const drawnContainer = containerClass.draw();
-      const bootstrapBar = $(drawnContainer.firstChild.firstChild);
-      containerDict[v.id] = bootstrapBar;
+      containerDict[v.id] = $(drawnContainer.firstChild.firstChild);
       const IDtext = document.createElement('div');
       IDtext.innerHTML = v.id;
       $(drawnContainer).append(IDtext);
