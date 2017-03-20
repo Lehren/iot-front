@@ -10,12 +10,9 @@ const ProgressComponent = require('./components/progress-component');
 const conn = new iot.Connection(settings);
 const fillLevelHandler = new iot.FillLevelController(conn);
 const containerDict = {};
-
 document.addEventListener('DOMContentLoaded', () => {
   drawContainers();
-
   setInterval(updateContainers, 5000);
-
 });
 
 function drawContainers() {
@@ -23,8 +20,7 @@ function drawContainers() {
     .then(fillLevel => fillLevel.map(v => {
       const containerClass = new ProgressComponent(v.id);
       const drawnContainer = containerClass.draw();
-      const bootstrapBar = $(drawnContainer.firstChild.firstChild);
-      containerDict[v.id] = bootstrapBar;
+      containerDict[v.id] = $(drawnContainer.firstChild.firstChild);
       const IDtext = document.createElement('div');
       IDtext.innerHTML = v.id;
       $(drawnContainer).append(IDtext);
@@ -37,6 +33,18 @@ function updateContainers() {
   return fillLevelHandler.getFillLevels()
     .then(fillLevel => fillLevel.map(v => {
       const bar = $(containerDict[v.id]);
+      let className;
+      if(v.fillLevel < 50){
+        className = "progress-bar-success";
+      }
+      else if(v.fillLevel >=50 && v.fillLevel <80){
+        className = "progress-bar-warning";
+      }
+      else if(v.fillLevel >=80){
+        className = "progress-bar-error";
+      }
+      bar.removeClass();
+      bar.addClass("progress-bar " + className);
       bar.attr('data-transitiongoal', v.fillLevel).progressbar({display_text: 'center'});
     }));
 }

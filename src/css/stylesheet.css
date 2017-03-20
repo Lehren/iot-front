@@ -2,6 +2,14 @@
 @import '../../node_modules/bootstrap-toggle/css/bootstrap-toggle.min.css';
 @import '../../node_modules/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css';
 
+.progress-bar {
+  -webkit-transition: height 2s ease-in-out, background-color 2s ease-in !important;
+  -moz-transition: height 2s ease-in-out, background-color 2s ease-in !important;
+  -ms-transition: height 2s ease-in-out, background-color 2s ease-in !important;
+  -o-transition: height 2s ease-in-out, background-color 2s ease-in !important;
+  transition: height 2s ease-in-out, background-color 2s ease-in !important;
+}
+
 body{
   background-color: #8bc34a;
 }
