@@ -11,7 +11,7 @@
 }
 
 body{
-  background-color: #8bc34a;
+  background-color: darkslategray;
 }
 
 .container {
@@ -20,22 +20,25 @@ body{
   padding-right: 10px;
 }
 
-.progress-row{
-  height: 100px;
-  padding: 10px;
+.row{
+  min-height: 100px;
+}
+
+.col {
+  padding: 15px 15px 15px 15px;
 }
 
 .progress {
   min-width: 50px;
-  margin: 0 auto;
+  margin: 0 0 0 0;
 }
 
 .vertical {
-  height: 100%;
+  min-height:100px;
 }
 
 .navbar {
-  background-color: #33691e;
+  background-color: lawngreen;
 }
 
 .navbar-brand {
