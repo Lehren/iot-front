@@ -3,6 +3,7 @@ const $ = global.jQuery;
 require('bootstrap');
 require('bootstrap-toggle');
 require('bootstrap-progressbar/bootstrap-progressbar.js');
+const json = require('json-string');
 const iot = require('iot-js-sdk');
 const settings = require('../settings/settings.json');
 const ProgressComponent = require('./components/progress-component');
@@ -15,18 +16,66 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateContainers, 5000);
 });
 
+/**
+ * Draw
+ * <div class="row">
+ *     <div class="col-md-12">
+ *         <div class="panel panel-default">
+ *             <div class="panel-body">
+ *                 JSON
+ *                 <pre>
+ *                 </pre>
+ *             </div>
+ *         </div>
+ *     </div>
+ * </div>
+ * @param container
+ */
+function drawJsonPanel(container) {
+  const rowContainer = document.createElement('div');
+  rowContainer.className = 'row';
+
+  const colContainer = document.createElement('div');
+  colContainer.className = 'col-md-12';
+
+  const panelContainer = document.createElement('div');
+  panelContainer.className = "panel panel-default";
+  panelContainer.innerHTML = "JSON";
+
+  const panel = document.createElement('div');
+  panel.className = "panel-body";
+  panel.style.textIndent = "30";
+
+  const preDiv = document.createElement('pre');
+  preDiv.id = "json-panel";
+
+  panel.appendChild(preDiv);
+  panelContainer.appendChild(panel);
+  colContainer.appendChild(panelContainer);
+  rowContainer.appendChild(colContainer);
+  container.append(rowContainer);
+}
+
+function fillJsonPanel(panel, data) {
+  panel.html(json(data));
+}
+
 function drawContainers() {
   fillLevelHandler.getFillLevels()
-    .then(fillLevel => fillLevel.map(v => {
-      const containerClass = new ProgressComponent(v.id);
-      const drawnContainer = containerClass.draw();
-      containerDict[v.id] = $(drawnContainer.firstChild.firstChild);
-      const IDtext = document.createElement('div');
-      IDtext.innerHTML = v.id;
-      $(drawnContainer).append(IDtext);
-      $("#content").append(drawnContainer);
-      updateContainers();
-    }));
+    .then(data => {
+      data.map(dataEntry => {
+        const containerClass = new ProgressComponent(dataEntry.id);
+        const rowContainer = containerClass.draw();
+        const colContainer = rowContainer.firstChild;
+        containerDict[dataEntry.id] = $(colContainer.firstChild.firstChild);
+        const IDtext = document.createElement('div');
+        IDtext.innerHTML = dataEntry.id;
+        $(colContainer).append(IDtext);
+        $("#content").append(rowContainer);
+        updateContainers();
+      });
+      drawJsonPanel($("#content"), data);
+    });
 }
 
 function updateContainers() {
