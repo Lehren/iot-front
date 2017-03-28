@@ -83,8 +83,10 @@ function updateContainers() {
     .then(data => {
       data.map(dataEntry => {
         const bar = $(containerDict[dataEntry.id]);
-        bar.css('background-color', getColorForPercentage(dataEntry.fillLevel / 100));
-        bar.attr('data-transitiongoal', dataEntry.fillLevel).progressbar({display_text: 'center'});
+        if (bar.attr('data-transitiongoal') !== dataEntry.fillLevel.toString()) {
+          bar.css('background-color', getColorForPercentage(dataEntry.fillLevel / 100));
+          bar.attr('data-transitiongoal', dataEntry.fillLevel).progressbar({display_text: 'center'});
+        }
       });
       fillJsonPanel($("#json-panel"), data);
     });
