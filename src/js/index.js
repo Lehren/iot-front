@@ -75,6 +75,9 @@ function drawContainers() {
         updateContainers();
       });
       drawJsonPanel($("#content"), data);
+    })
+    .catch(error => {
+      console.debug('Caught error', error);
     });
 }
 
@@ -89,6 +92,9 @@ function updateContainers() {
         }
       });
       fillJsonPanel($("#json-panel"), data);
+    })
+    .catch(error => {
+      console.debug('Caught error', error);
     });
 }
 
