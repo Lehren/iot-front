@@ -12,8 +12,32 @@ const conn = new iot.Connection(settings);
 const fillLevelHandler = new iot.FillLevelController(conn);
 const containerDict = {};
 document.addEventListener('DOMContentLoaded', () => {
-  drawContainers();
-  setInterval(updateContainers, 5000);
+  $('#content').load('./home.html');
+
+  const homeButton = $('#home-button');
+  const containerButton =$('#containers-button');
+  const overviewButton = $('#overview-button');
+
+  homeButton.click(() => {
+    homeButton.addClass('active');
+    containerButton.removeClass('active');
+    overviewButton.removeClass('active');
+    $('#content').load('./home.html');
+  });
+
+  containerButton.click(() => {
+    containerButton.addClass('active');
+    homeButton.removeClass('active');
+    overviewButton.removeClass('active');
+    $('#content').load('./containers.html');
+  });
+
+  overviewButton.click(() => {
+    overviewButton.addClass('active');
+    homeButton.removeClass('active');
+    containerButton.removeClass('active');
+    $('#content').load('./overview.html');
+  });
 });
 
 /**

@@ -37,8 +37,9 @@ body{
   min-height:100px;
 }
 
-.navbar {
-  background-color: lawngreen;
+.panel {
+  margin-top: 10px;
+  margin-bottom: 10px !important;
 }
 
 .navbar-brand {
