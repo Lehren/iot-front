@@ -8,7 +8,6 @@ const iot = require('iot-js-sdk');
 const settings = require('../settings/settings.json');
 const conn = new iot.Connection(settings);
 const containerHandler = new iot.ContainerController(conn);
-const usergroupHandler = new iot.UsergroupController(conn);
 const containerMarkerDict = {};
 const containersNearMe = [];
 const markersOnMap = [];
@@ -37,8 +36,7 @@ function getNearContainers(position) {
 }
 function putContainerMarkers() {
   $(document).on('submit', '#map-form', () =>{
-    console.log('plplplpll', $('#input-id').val(), $('#input-email').val());
-    usergroupHandler.postUsergroup($('#input-id').val(), $('#input-email').val());
+    containerHandler.subscribeToContainer($('#input-id').val(), $('#input-email').val());
     //return false;
   });
   containersNearMe.map(container => {
