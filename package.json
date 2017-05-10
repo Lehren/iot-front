@@ -27,6 +27,7 @@
     "eslint-config-d-centralize": "^0.4.1"
   },
   "dependencies": {
+    "@google/maps": "latest",
     "bootstrap": "=3.3.4",
     "bootstrap-progressbar": "^0.9.0",
     "bootstrap-toggle": "^2.2.2",
