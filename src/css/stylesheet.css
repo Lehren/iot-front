@@ -17,16 +17,6 @@ body{
 
 .container {
   background-color: #FFFFFF;
-  border-radius: 10px;
-  padding-right: 10px;
-}
-
-.row{
-  min-height: 100px;
-}
-
-.col {
-  padding: 15px 15px 15px 15px;
 }
 
 .progress {
@@ -49,4 +39,22 @@ body{
 
 .navbar-brand>img {
   height: 50px;
+}
+
+.iframe-container{
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* Ratio 16:9 ( 100%/16*9 = 56.25% ) */
+}
+.iframe-container > *{
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
 }
