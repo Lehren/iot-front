@@ -9,13 +9,16 @@ const settings = require('../settings/settings.json');
 const conn = new iot.Connection(settings);
 const containerHandler = new iot.ContainerController(conn);
 const containerMarkerDict = {};
-const containersNearMe = [];
-const markersOnMap = [];
+let containerArray = [];
+let directionsService;
+let markersOnMap = [];
 let infoWindow;
+let currentPos;
 function getLocation() {
   infoWindow = new google.maps.InfoWindow({
     maxWidth: 300
   });
+  directionsService = new google.maps.DirectionsService;
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(initMap);
   } else {
@@ -23,11 +26,25 @@ function getLocation() {
   }
 }
 
-function getNearContainers(position) {
-  return containerHandler.getContainersNearMe(position.coords.latitude, position.coords.longitude)
+function getNearContainers() {
+  return containerHandler.getContainersNearMe(currentPos.coords.latitude, currentPos.coords.longitude)
     .then(containers => {
+      containerArray = [];
       containers.map(container => {
-        containersNearMe.push(container);
+        containerArray.push(container);
+      })
+    })
+    .catch(error => {
+      console.debug('Caught error', error);
+    });
+}
+
+function getAllContainers() {
+  return containerHandler.getAllContainers()
+    .then(containers => {
+      containerArray = [];
+      containers.map(container => {
+        containerArray.push(container);
       })
     })
     .catch(error => {
@@ -35,11 +52,11 @@ function getNearContainers(position) {
     });
 }
 function putContainerMarkers() {
-  $(document).on('submit', '#map-form', () =>{
-    containerHandler.subscribeToContainer($('#input-id').val(), $('#input-email').val());
-    //return false;
+  markersOnMap.map(marker => {
+    marker.setMap(null);
   });
-  containersNearMe.map(container => {
+  markersOnMap = [];
+  containerArray.map(container => {
     const contentString = `
       <div id="content">
       <div id="siteNotice">
@@ -77,10 +94,11 @@ function putContainerMarkers() {
 }
 
 function initMap(position) {
+  currentPos = position;
   return new Promise((resolve) => {
     const mapCanvas = document.getElementById('google-map');
     const mapOptions = {
-      center: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+      center: new google.maps.LatLng(currentPos.coords.latitude, currentPos.coords.longitude),
       zoom: 16,
       mapTypeControl: false,
       streetViewControl: false,
@@ -88,61 +106,67 @@ function initMap(position) {
     };
     window.googleMap = new google.maps.Map(mapCanvas, mapOptions);
     resolve();
-  }).then(() => getNearContainers(position))
-    .then(() => {
-      putContainerMarkers();
-    })
-    .catch(error => {
-      console.debug('Caught error', error);
-    });
-}
-
-function pollContainers() {
-
+  });
 }
 
 function setupEnvironment() {
-  google.maps.event.addDomListener(window, 'load', getLocation);
-  setInterval(() => {
-    pollContainers()
-  }, 3000);
   const homeButton = $('#home-button');
   const containerButton = $('#containers-button');
   const overviewButton = $('#overview-button');
-  homeButton.click(() => {
-    homeButton.addClass('active');
-    containerButton.removeClass('active');
-    overviewButton.removeClass('active');
+  const routeButton = $('#calc-route-button');
+  google.maps.event.addDomListener(window, 'load', () => {
+    getLocation();
+    homeButton.click(() => {
+      homeButton.addClass('active');
+      containerButton.removeClass('active');
+      overviewButton.removeClass('active');
 
-    $('#home-div').show();
-    $('#map-div').hide();
-    $('#route-button-div').hide();
-  });
-  containerButton.click(() => {
-    containerButton.addClass('active');
-    homeButton.removeClass('active');
-    overviewButton.removeClass('active');
-
-    $('#home-div').hide();
-    $('#map-div').show(0, () => {
-      const center = window.googleMap.getCenter();
-      google.maps.event.trigger(window.googleMap, 'resize');
-      window.googleMap.setCenter(center);
+      $('#home-div').show();
+      $('#map-div').hide();
+      $('#route-button-div').hide();
     });
-    $('#route-button-div').hide();
-  });
-  overviewButton.click(() => {
-    overviewButton.addClass('active');
-    homeButton.removeClass('active');
-    containerButton.removeClass('active');
+    containerButton.click(() => {
+      containerButton.addClass('active');
+      homeButton.removeClass('active');
+      overviewButton.removeClass('active');
 
-    $('#home-div').hide();
-    $('#map-div').show(0, () => {
-      const center = window.googleMap.getCenter();
-      google.maps.event.trigger(window.googleMap, 'resize');
-      window.googleMap.setCenter(center);
+      $('#home-div').hide();
+      $('#map-div').show(0, () => {
+        const center = window.googleMap.getCenter();
+        google.maps.event.trigger(window.googleMap, 'resize');
+        window.googleMap.setCenter(center);
+        return getNearContainers()
+          .then(putContainerMarkers)
+          .catch(error => {
+            console.debug('Caught error', error);
+          });
+      });
+      $('#route-button-div').hide();
     });
-    $('#route-button-div').show();
+    overviewButton.click(() => {
+      overviewButton.addClass('active');
+      homeButton.removeClass('active');
+      containerButton.removeClass('active');
+
+      $('#home-div').hide();
+      $('#map-div').show(0, () => {
+        const center = window.googleMap.getCenter();
+        google.maps.event.trigger(window.googleMap, 'resize');
+        window.googleMap.setCenter(center);
+        return getAllContainers()
+          .then(putContainerMarkers)
+          .catch(error => {
+            console.debug('Caught error', error);
+          });
+      });
+      $('#route-button-div').show();
+    });
+    $(document).on('submit', '#map-form', () => {
+      containerHandler.subscribeToContainer($('#input-id').val(), $('#input-email').val());
+    });
+    routeButton.click(() => {
+      calculateRoute()
+    });
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
@@ -158,5 +182,31 @@ function getColorForPercentage(pct) {
   }
   else return 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
 }
+
+function calculateRoute() {
+  const cordsArray = markersOnMap.map(mark => {return {location: mark.position}});
+  directionsService.route({
+    origin: markersOnMap[0].position,
+    destination: markersOnMap[0].position,
+    waypoints: cordsArray,
+    optimizeWaypoints: true,
+    travelMode: 'DRIVING'
+  }, function (response, status) {
+    // Route the directions and pass the response to a function to create
+    // markers for each step.
+    if (status === 'OK') {
+      new google.maps.DirectionsRenderer({
+        map: window.googleMap,
+        directions: response,
+        suppressMarkers: true,
+        suppressInfoWindows: true
+      });
+      console.debug('kurwa', response);
+    } else {
+      window.alert('Directions request failed due to ' + status);
+    }
+  });
+}
+
 
 
