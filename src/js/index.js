@@ -6,147 +6,159 @@ require('bootstrap-progressbar/bootstrap-progressbar.js');
 const json = require('json-string');
 const iot = require('iot-js-sdk');
 const settings = require('../settings/settings.json');
-const ProgressComponent = require('./components/progress-component');
-
 const conn = new iot.Connection(settings);
-const fillLevelHandler = new iot.FillLevelController(conn);
-const containerDict = {};
-document.addEventListener('DOMContentLoaded', () => {
-  $('#content').load('./home.html');
+const containerHandler = new iot.ContainerController(conn);
+const usergroupHandler = new iot.UsergroupController(conn);
+const containerMarkerDict = {};
+const containersNearMe = [];
+const markersOnMap = [];
+let infoWindow;
+function getLocation() {
+  infoWindow = new google.maps.InfoWindow({
+    maxWidth: 300
+  });
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(initMap);
+  } else {
+    $('#google-map').html("Geolocation is not supported by this browser.");
+  }
+}
 
+function getNearContainers(position) {
+  return containerHandler.getContainersNearMe(position.coords.latitude, position.coords.longitude)
+    .then(containers => {
+      containers.map(container => {
+        containersNearMe.push(container);
+      })
+    })
+    .catch(error => {
+      console.debug('Caught error', error);
+    });
+}
+function putContainerMarkers() {
+  $(document).on('submit', '#map-form', () =>{
+    console.log('plplplpll', $('#input-id').val(), $('#input-email').val());
+    usergroupHandler.postUsergroup($('#input-id').val(), $('#input-email').val());
+    //return false;
+  });
+  containersNearMe.map(container => {
+    const contentString = `
+      <div id="content">
+      <div id="siteNotice">
+      </div>
+      <p id="container-id"><strong>${container.id}</strong></p>
+      <hr/>
+      <div id="bodyContent">
+      <p>
+      <strong>Coordinates:</strong> ${container.latitude}, ${container.longitude}
+      </p>
+      <p>
+      <strong>FillLevel:</strong> ${container.fillLevel}%
+      </p>
+      <form id='map-form'>
+      Email: <input id="input-email" type="text"/>
+      <input id="input-id" type="text" value=${container.id} hidden>
+      <input type="submit" id='map-submit' value='Subscribe'/>
+      </form>
+      </div>
+      </div>
+      `;
+    const marker = new google.maps.Marker({
+      position: {lat: container.latitude, lng: container.longitude},
+      map: window.googleMap,
+      title: container.id,
+      icon: getColorForPercentage(container.fillLevel)
+    });
+    marker.addListener('click', function () {
+      infoWindow.setContent(contentString);
+      infoWindow.open(window.googleMap, marker);
+    });
+    markersOnMap.push(marker);
+    containerMarkerDict.container = marker;
+  });
+}
+
+function initMap(position) {
+  return new Promise((resolve) => {
+    const mapCanvas = document.getElementById('google-map');
+    const mapOptions = {
+      center: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+      zoom: 16,
+      mapTypeControl: false,
+      streetViewControl: false,
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+    };
+    window.googleMap = new google.maps.Map(mapCanvas, mapOptions);
+    resolve();
+  }).then(() => getNearContainers(position))
+    .then(() => {
+      putContainerMarkers();
+    })
+    .catch(error => {
+      console.debug('Caught error', error);
+    });
+}
+
+function pollContainers() {
+
+}
+
+function setupEnvironment() {
+  google.maps.event.addDomListener(window, 'load', getLocation);
+  setInterval(() => {
+    pollContainers()
+  }, 3000);
   const homeButton = $('#home-button');
-  const containerButton =$('#containers-button');
+  const containerButton = $('#containers-button');
   const overviewButton = $('#overview-button');
-
   homeButton.click(() => {
     homeButton.addClass('active');
     containerButton.removeClass('active');
     overviewButton.removeClass('active');
-    $('#content').load('./home.html');
-  });
 
+    $('#home-div').show();
+    $('#map-div').hide();
+    $('#route-button-div').hide();
+  });
   containerButton.click(() => {
     containerButton.addClass('active');
     homeButton.removeClass('active');
     overviewButton.removeClass('active');
-    $('#content').load('./containers.html');
-  });
 
+    $('#home-div').hide();
+    $('#map-div').show(0, () => {
+      const center = window.googleMap.getCenter();
+      google.maps.event.trigger(window.googleMap, 'resize');
+      window.googleMap.setCenter(center);
+    });
+    $('#route-button-div').hide();
+  });
   overviewButton.click(() => {
     overviewButton.addClass('active');
     homeButton.removeClass('active');
     containerButton.removeClass('active');
-    $('#content').load('./overview.html');
+
+    $('#home-div').hide();
+    $('#map-div').show(0, () => {
+      const center = window.googleMap.getCenter();
+      google.maps.event.trigger(window.googleMap, 'resize');
+      window.googleMap.setCenter(center);
+    });
+    $('#route-button-div').show();
   });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  setupEnvironment();
 });
 
-/**
- * Draw
- * <div class="row">
- *     <div class="col-md-12">
- *         <div class="panel panel-default">
- *             <div class="panel-body">
- *                 JSON
- *                 <pre>
- *                 </pre>
- *             </div>
- *         </div>
- *     </div>
- * </div>
- * @param container
- */
-function drawJsonPanel(container) {
-  const rowContainer = document.createElement('div');
-  rowContainer.className = 'row';
-
-  const colContainer = document.createElement('div');
-  colContainer.className = 'col-md-12';
-
-  const panelContainer = document.createElement('div');
-  panelContainer.className = "panel panel-default";
-  panelContainer.innerHTML = "JSON";
-
-  const panel = document.createElement('div');
-  panel.className = "panel-body";
-  panel.style.textIndent = "30";
-
-  const preDiv = document.createElement('pre');
-  preDiv.id = "json-panel";
-
-  panel.appendChild(preDiv);
-  panelContainer.appendChild(panel);
-  colContainer.appendChild(panelContainer);
-  rowContainer.appendChild(colContainer);
-  container.append(rowContainer);
-}
-
-function fillJsonPanel(panel, data) {
-  panel.html(json(data));
-}
-
-function drawContainers() {
-  fillLevelHandler.getFillLevels()
-    .then(data => {
-      data.map(dataEntry => {
-        const containerClass = new ProgressComponent(dataEntry.id);
-        const rowContainer = containerClass.draw();
-        const colContainer = rowContainer.firstChild;
-        containerDict[dataEntry.id] = $(colContainer.firstChild.firstChild);
-        const IDtext = document.createElement('div');
-        IDtext.innerHTML = dataEntry.id;
-        $(colContainer).append(IDtext);
-        $("#content").append(rowContainer);
-        updateContainers();
-      });
-      drawJsonPanel($("#content"), data);
-    })
-    .catch(error => {
-      console.debug('Caught error', error);
-    });
-}
-
-function updateContainers() {
-  return fillLevelHandler.getFillLevels()
-    .then(data => {
-      data.map(dataEntry => {
-        const bar = $(containerDict[dataEntry.id]);
-        if (bar.attr('data-transitiongoal') !== dataEntry.fillLevel.toString()) {
-          bar.css('background-color', getColorForPercentage(dataEntry.fillLevel / 100));
-          bar.attr('data-transitiongoal', dataEntry.fillLevel).progressbar({display_text: 'center'});
-        }
-      });
-      fillJsonPanel($("#json-panel"), data);
-    })
-    .catch(error => {
-      console.debug('Caught error', error);
-    });
-}
-
-const percentColors = [
-  {pct: 0.0, color: {r: 0, g: 255, b: 0}},
-  {pct: 0.5, color: {r: 255, g: 255, b: 0}},
-  {pct: 1.0, color: {r: 255, g: 0, b: 0}}];
-
 function getColorForPercentage(pct) {
-  let i;
-  for (i = 1; i < percentColors.length - 1; i++) {
-    if (pct < percentColors[i].pct) {
-      break;
-    }
+  if (pct > 50 && pct < 80) {
+    return 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
   }
-  const lower = percentColors[i - 1];
-  const upper = percentColors[i];
-  const range = upper.pct - lower.pct;
-  const rangePct = (pct - lower.pct) / range;
-  const pctLower = 1 - rangePct;
-  const pctUpper = rangePct;
-  const color = {
-    r: Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),
-    g: Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),
-    b: Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)
-  };
-  return 'rgb(' + [color.r, color.g, color.b].join(',') + ')';
-  // or output as hex if preferred
+  else if (pct > 80 && pct <= 100) {
+    return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+  }
+  else return 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
 }
 
 

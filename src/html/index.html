@@ -28,9 +28,58 @@
 
 <div id="content" class="container">
 
+  <div id="home-div">
+    <div class="row">
+      <div class="col-md-6">
+        <img class="img-responsive" src="../images/fontys-logo.png"/>
+      </div>
+      <div class="col-md-6">
+        <img class="img-responsive" src="../images/textless_iot_logo.png"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <p>Welcome to the website of the 'Internet of Trash' project!</p>
+            <p>This project was made during the 2017 Fontys Venlo minor Research and Innovation.</p>
+            <p>Technologies used: </p>
+            <ul>
+              <li>NodeJS</li>
+              <li>Bootstrap</li>
+              <li>C#</li>
+              <li>RestSharp</li>
+              <li>DBreeze</li>
+              <li>Arduino hardware</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="map-div" hidden>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+        <div class="iframe-container" id="google-map">
+        </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="route-button-div">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+        <button class="btn btn-primary btn-block" type="button" id="calc-route-button">Calculate route</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="../../index.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBslP8KcI1HsGDvsPcbVYi_RL2vl4kh-_c"></script>
 
 </body>
 </html>
