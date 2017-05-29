@@ -3,27 +3,45 @@ const $ = global.jQuery;
 require('bootstrap');
 require('bootstrap-toggle');
 require('bootstrap-progressbar/bootstrap-progressbar.js');
+require('./jquery.timer');
 const json = require('json-string');
 const iot = require('iot-js-sdk');
 const settings = require('../settings/settings.json');
 const conn = new iot.Connection(settings);
 const containerHandler = new iot.ContainerController(conn);
-const containerMarkerDict = {};
+let containerMarkerDict = [];
 let containerArray = [];
 let directionsService;
 let markersOnMap = [];
 let infoWindow;
 let currentPos;
+
+let nearContainerInterval = $.timer(function () {
+  return getNearContainers();
+    //.then(putContainerMarkers);
+}, 2000, false);
+
+let allContainerInterval = $.timer(function () {
+  return getAllContainers();
+    //.then(putContainerMarkers);
+}, 2000, false);
+
 function getLocation() {
-  infoWindow = new google.maps.InfoWindow({
-    maxWidth: 300
-  });
-  directionsService = new google.maps.DirectionsService;
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(initMap);
-  } else {
-    $('#google-map').html("Geolocation is not supported by this browser.");
-  }
+  return new Promise((resolve, reject) => {
+    infoWindow = new google.maps.InfoWindow({
+      maxWidth: 300
+    });
+    directionsService = new google.maps.DirectionsService;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(resolve);
+    } else {
+      $('#google-map').html("Geolocation is not supported by this browser.");
+    }
+  })
+    .then(position => {
+      initMap(position);
+      return Promise.resolve();
+    });
 }
 
 function getNearContainers() {
@@ -31,8 +49,13 @@ function getNearContainers() {
     .then(containers => {
       containerArray = [];
       containers.map(container => {
+        if (container.id === "prototype_container1") {
+          const bar = $('#local-container');
+          bar.css('background-color', getColorMapForPercentage(container.fillLevel / 100));
+          bar.attr('data-transitiongoal', container.fillLevel).progressbar({display_text: 'fill'});
+        }
         containerArray.push(container);
-      })
+      });
     })
     .catch(error => {
       console.debug('Caught error', error);
@@ -44,6 +67,11 @@ function getAllContainers() {
     .then(containers => {
       containerArray = [];
       containers.map(container => {
+        if (container.id === "prototype_container1") {
+          const bar = $('#local-container');
+          bar.css('background-color', getColorMapForPercentage(container.fillLevel / 100));
+          bar.attr('data-transitiongoal', container.fillLevel).progressbar({display_text: 'fill'});
+        }
         containerArray.push(container);
       })
     })
@@ -52,6 +80,7 @@ function getAllContainers() {
     });
 }
 function putContainerMarkers() {
+  containerMarkerDict = [];
   markersOnMap.map(marker => {
     marker.setMap(null);
   });
@@ -71,7 +100,7 @@ function putContainerMarkers() {
       <strong>FillLevel:</strong> ${container.fillLevel}%
       </p>
       <form id='map-form'>
-      Email: <input id="input-email" type="text"/>
+      <strong>Email:</strong> <input id="input-email" type="text"/>
       <input id="input-id" type="text" value=${container.id} hidden>
       <input type="submit" id='map-submit' value='Subscribe'/>
       </form>
@@ -89,7 +118,7 @@ function putContainerMarkers() {
       infoWindow.open(window.googleMap, marker);
     });
     markersOnMap.push(marker);
-    containerMarkerDict.container = marker;
+    containerMarkerDict.push({marker: marker, container: container});
   });
 }
 
@@ -113,60 +142,80 @@ function setupEnvironment() {
   const homeButton = $('#home-button');
   const containerButton = $('#containers-button');
   const overviewButton = $('#overview-button');
+  const localContainerButton = $('#local-container-button');
   const routeButton = $('#calc-route-button');
   google.maps.event.addDomListener(window, 'load', () => {
-    getLocation();
-    homeButton.click(() => {
-      homeButton.addClass('active');
-      containerButton.removeClass('active');
-      overviewButton.removeClass('active');
+    getLocation()
+      .then(() => {
+        nearContainerInterval.play();
+        homeButton.click(() => {
+          homeButton.addClass('active');
+          containerButton.removeClass('active');
+          overviewButton.removeClass('active');
+          localContainerButton.removeClass('active');
 
-      $('#home-div').show();
-      $('#map-div').hide();
-      $('#route-button-div').hide();
-    });
-    containerButton.click(() => {
-      containerButton.addClass('active');
-      homeButton.removeClass('active');
-      overviewButton.removeClass('active');
+          $('#home-div').show();
+          $('#map-div').hide();
+          $('#route-button-div').hide();
+          $('#local-container-div').hide();
+        });
+        containerButton.click(() => {
+          containerButton.addClass('active');
+          homeButton.removeClass('active');
+          overviewButton.removeClass('active');
+          localContainerButton.removeClass('active');
 
-      $('#home-div').hide();
-      $('#map-div').show(0, () => {
-        const center = window.googleMap.getCenter();
-        google.maps.event.trigger(window.googleMap, 'resize');
-        window.googleMap.setCenter(center);
-        return getNearContainers()
-          .then(putContainerMarkers)
-          .catch(error => {
-            console.debug('Caught error', error);
+          $('#home-div').hide();
+          $('#local-container-div').hide();
+          $('#map-div').show(0, () => {
+            const center = window.googleMap.getCenter();
+            google.maps.event.trigger(window.googleMap, 'resize');
+            window.googleMap.setCenter(center);
+            allContainerInterval.stop();
+            nearContainerInterval.play(true);
           });
-      });
-      $('#route-button-div').hide();
-    });
-    overviewButton.click(() => {
-      overviewButton.addClass('active');
-      homeButton.removeClass('active');
-      containerButton.removeClass('active');
+          $('#route-button-div').hide();
+        });
+        overviewButton.click(() => {
+          overviewButton.addClass('active');
+          homeButton.removeClass('active');
+          containerButton.removeClass('active');
+          localContainerButton.removeClass('active');
 
-      $('#home-div').hide();
-      $('#map-div').show(0, () => {
-        const center = window.googleMap.getCenter();
-        google.maps.event.trigger(window.googleMap, 'resize');
-        window.googleMap.setCenter(center);
-        return getAllContainers()
-          .then(putContainerMarkers)
-          .catch(error => {
-            console.debug('Caught error', error);
+          $('#home-div').hide();
+          $('#local-container-div').hide();
+          $('#map-div').show(0, () => {
+            const center = window.googleMap.getCenter();
+            google.maps.event.trigger(window.googleMap, 'resize');
+            window.googleMap.setCenter(center);
+            nearContainerInterval.stop();
+            allContainerInterval.play(true);
           });
+          $('#route-button-div').show();
+        });
+
+        localContainerButton.click(() => {
+          localContainerButton.addClass('active');
+          overviewButton.removeClass('active');
+          homeButton.removeClass('active');
+          containerButton.removeClass('active');
+
+          $('#home-div').hide();
+          $('#map-div').hide();
+          $('#route-button-div-div').hide();
+          $('#local-container-div').show();
+        });
+
+        $(document).on('submit', '#map-form', () => {
+          containerHandler.subscribeToContainer($('#input-id').val(), $('#input-email').val());
+        });
+        routeButton.click(() => {
+          calculateRoute()
+        });
+
+        getAllContainers()
+          .then(putContainerMarkers);
       });
-      $('#route-button-div').show();
-    });
-    $(document).on('submit', '#map-form', () => {
-      containerHandler.subscribeToContainer($('#input-id').val(), $('#input-email').val());
-    });
-    routeButton.click(() => {
-      calculateRoute()
-    });
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
@@ -183,8 +232,44 @@ function getColorForPercentage(pct) {
   else return 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
 }
 
+const percentColors = [
+  {pct: 0.0, color: {r: 0, g: 255, b: 0}},
+  {pct: 0.5, color: {r: 255, g: 165, b: 0}},
+  {pct: 1.0, color: {r: 255, g: 0, b: 0}}];
+
+function getColorMapForPercentage(pct) {
+  let i;
+  for (i = 1; i < percentColors.length - 1; i++) {
+    if (pct < percentColors[i].pct) {
+      break;
+    }
+  }
+  const lower = percentColors[i - 1];
+  const upper = percentColors[i];
+  const range = upper.pct - lower.pct;
+  const rangePct = (pct - lower.pct) / range;
+  const pctLower = 1 - rangePct;
+  const pctUpper = rangePct;
+  const color = {
+    r: Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),
+    g: Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),
+    b: Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)
+  };
+  return 'rgb(' + [color.r, color.g, color.b].join(',') + ')';
+}
+
 function calculateRoute() {
-  const cordsArray = markersOnMap.map(mark => {return {location: mark.position}});
+  const cordsArray = [];
+  markersOnMap.map(mark => {
+    containerMarkerDict.map(entry => {
+      if (entry.marker.title === mark.title) {
+        if (entry.container.fillLevel > 50) {
+          cordsArray.push({location: mark.position});
+        }
+      }
+    });
+  });
+
   directionsService.route({
     origin: markersOnMap[0].position,
     destination: markersOnMap[0].position,
@@ -201,7 +286,6 @@ function calculateRoute() {
         suppressMarkers: true,
         suppressInfoWindows: true
       });
-      console.debug('kurwa', response);
     } else {
       window.alert('Directions request failed due to ' + status);
     }
