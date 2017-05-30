@@ -2,3 +2,4 @@
 /coverage/
 /node_modules/
 index.js
+/src/js/jquery.timer.js

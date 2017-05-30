@@ -172,7 +172,9 @@ function setupEnvironment() {
             google.maps.event.trigger(window.googleMap, 'resize');
             window.googleMap.setCenter(center);
             allContainerInterval.stop();
-            nearContainerInterval.play(true);
+            getNearContainers()
+              .then(putContainerMarkers)
+              .then(() => {nearContainerInterval.play(true)});
           });
           $('#route-button-div').hide();
         });
@@ -189,7 +191,9 @@ function setupEnvironment() {
             google.maps.event.trigger(window.googleMap, 'resize');
             window.googleMap.setCenter(center);
             nearContainerInterval.stop();
-            allContainerInterval.play(true);
+            getAllContainers()
+              .then(putContainerMarkers)
+              .then(() => {allContainerInterval.play(true);});
           });
           $('#route-button-div').show();
         });
@@ -210,10 +214,10 @@ function setupEnvironment() {
           containerHandler.subscribeToContainer($('#input-id').val(), $('#input-email').val());
         });
         routeButton.click(() => {
-          calculateRoute()
+          calculateRoute();
         });
 
-        getAllContainers()
+        return getAllContainers()
           .then(putContainerMarkers);
       });
   });
