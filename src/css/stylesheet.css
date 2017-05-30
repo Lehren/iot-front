@@ -20,12 +20,8 @@ body{
 }
 
 .progress {
-  min-width: 50px;
-  margin: 0 0 0 0;
-}
-
-.vertical {
-  min-height:100px;
+  min-width: 80px;
+  min-height: 100px;
 }
 
 .panel {

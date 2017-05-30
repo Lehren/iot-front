@@ -22,6 +22,7 @@
       <li id="home-button" class="active"><a href="#">Home</a></li>
       <li id="containers-button"><a href="#">Containers near me</a></li>
       <li id="overview-button"><a href="#">Overview</a></li>
+      <li id="local-container-button"><a href="#">Local Container</a></li>
     </ul>
   </div>
 </nav>
@@ -62,15 +63,32 @@
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
-        <div class="iframe-container" id="google-map">
-        </div>
+          <div class="iframe-container" id="google-map">
+          </div>
         </div>
       </div>
     </div>
     <div class="row" id="route-button-div">
       <div class="col-md-12">
         <div class="panel panel-default">
-        <button class="btn btn-primary btn-block" type="button" id="calc-route-button">Calculate route</button>
+          <button class="btn btn-primary btn-block" type="button" id="calc-route-button">Calculate route</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="local-container-div" hidden>
+    <div class="row text-center">
+      <div class="well">
+        <h3>This is the local container at the Minor Exhibition at Fontys Venlo. Try to fill the container and push
+          the red button and see the the fill-level change!</h3>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-5"></div>
+      <div class="col-md-7">
+        <div class="progress vertical bottom">
+          <div class="progress-bar" role="progressbar" id="local-container"></div>
         </div>
       </div>
     </div>
