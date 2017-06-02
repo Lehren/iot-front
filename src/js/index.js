@@ -177,6 +177,10 @@ function setupEnvironment() {
               .then(() => {nearContainerInterval.play(true)});
           });
           $('#route-button-div').hide();
+          if (window.directionsDisplay != null) {
+            window.directionsDisplay.setMap(null);
+            window.directionsDisplay = null;
+          }
         });
         overviewButton.click(() => {
           overviewButton.addClass('active');
@@ -284,7 +288,7 @@ function calculateRoute() {
     // Route the directions and pass the response to a function to create
     // markers for each step.
     if (status === 'OK') {
-      new google.maps.DirectionsRenderer({
+      window.directionsDisplay = new google.maps.DirectionsRenderer({
         map: window.googleMap,
         directions: response,
         suppressMarkers: true,
