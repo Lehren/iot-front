@@ -18,12 +18,12 @@ let currentPos;
 
 let nearContainerInterval = $.timer(function () {
   return getNearContainers();
-    //.then(putContainerMarkers);
+  //.then(putContainerMarkers);
 }, 2000, false);
 
 let allContainerInterval = $.timer(function () {
   return getAllContainers();
-    //.then(putContainerMarkers);
+  //.then(putContainerMarkers);
 }, 2000, false);
 
 function getLocation() {
@@ -174,9 +174,12 @@ function setupEnvironment() {
             allContainerInterval.stop();
             getNearContainers()
               .then(putContainerMarkers)
-              .then(() => {nearContainerInterval.play(true)});
+              .then(() => {
+                nearContainerInterval.play(true)
+              });
           });
           $('#route-button-div').hide();
+          window.directionsDisplay.setDirections({routes:[]});
         });
         overviewButton.click(() => {
           overviewButton.addClass('active');
@@ -193,7 +196,9 @@ function setupEnvironment() {
             nearContainerInterval.stop();
             getAllContainers()
               .then(putContainerMarkers)
-              .then(() => {allContainerInterval.play(true);});
+              .then(() => {
+                allContainerInterval.play(true);
+              });
           });
           $('#route-button-div').show();
         });
@@ -215,6 +220,12 @@ function setupEnvironment() {
         });
         routeButton.click(() => {
           calculateRoute();
+        });
+
+        window.directionsDisplay = new google.maps.DirectionsRenderer({
+          map: window.googleMap,
+          suppressMarkers: true,
+          suppressInfoWindows: true
         });
 
         return getAllContainers()
@@ -284,12 +295,7 @@ function calculateRoute() {
     // Route the directions and pass the response to a function to create
     // markers for each step.
     if (status === 'OK') {
-      new google.maps.DirectionsRenderer({
-        map: window.googleMap,
-        directions: response,
-        suppressMarkers: true,
-        suppressInfoWindows: true
-      });
+      window.directionsDisplay.setDirections(response);
     } else {
       window.alert('Directions request failed due to ' + status);
     }
