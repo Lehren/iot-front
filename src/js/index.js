@@ -282,10 +282,10 @@ function getHistoryOfLocalContainer() {
 }
 
 function getColorForPercentage(pct) {
-  if (pct > 50 && pct < 80) {
+  if (pct >= 50 && pct < 80) {
     return 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
   }
-  else if (pct > 80 && pct <= 100) {
+  else if (pct >= 80 && pct <= 100) {
     return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
   }
   else return 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
