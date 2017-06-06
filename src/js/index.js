@@ -56,7 +56,6 @@ function getNearContainers() {
         if (container.id === "prototype_container1") {
           if (container.lastUpdated !== lastTimeStamp) {
             lastTimeStamp = container.lastUpdated;
-            console.debug('data added', container.fillLevel);
             addData(window.localChart, chartCounter++, container.fillLevel);
           }
           const bar = $('#local-container');
@@ -79,7 +78,6 @@ function getAllContainers() {
         if (container.id === "prototype_container1") {
           if (container.lastUpdated !== lastTimeStamp) {
             lastTimeStamp = container.lastUpdated;
-            console.debug('data added', chartCounter, container.fillLevel);
             addData(window.localChart, chartCounter++, container.fillLevel);
           }
           const bar = $('#local-container');
