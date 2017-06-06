@@ -4,17 +4,21 @@ require('bootstrap');
 require('bootstrap-toggle');
 require('bootstrap-progressbar/bootstrap-progressbar.js');
 require('./jquery.timer');
+require('chart.js');
 const json = require('json-string');
 const iot = require('iot-js-sdk');
 const settings = require('../settings/settings.json');
 const conn = new iot.Connection(settings);
 const containerHandler = new iot.ContainerController(conn);
+const historyHandler = new iot.HistoryController(conn);
 let containerMarkerDict = [];
 let containerArray = [];
 let directionsService;
 let markersOnMap = [];
 let infoWindow;
 let currentPos;
+let chartCounter = 0;
+let lastTimeStamp;
 
 let nearContainerInterval = $.timer(function () {
   return getNearContainers();
@@ -50,6 +54,10 @@ function getNearContainers() {
       containerArray = [];
       containers.map(container => {
         if (container.id === "prototype_container1") {
+          if (container.lastUpdated !== lastTimeStamp) {
+            lastTimeStamp = container.lastUpdated;
+            addData(window.localChart, chartCounter++, container.fillLevel);
+          }
           const bar = $('#local-container');
           bar.css('background-color', getColorMapForPercentage(container.fillLevel / 100));
           bar.attr('data-transitiongoal', container.fillLevel).progressbar({display_text: 'fill'});
@@ -68,6 +76,10 @@ function getAllContainers() {
       containerArray = [];
       containers.map(container => {
         if (container.id === "prototype_container1") {
+          if (container.lastUpdated !== lastTimeStamp) {
+            lastTimeStamp = container.lastUpdated;
+            addData(window.localChart, chartCounter++, container.fillLevel);
+          }
           const bar = $('#local-container');
           bar.css('background-color', getColorMapForPercentage(container.fillLevel / 100));
           bar.attr('data-transitiongoal', container.fillLevel).progressbar({display_text: 'fill'});
@@ -179,7 +191,7 @@ function setupEnvironment() {
               });
           });
           $('#route-button-div').hide();
-          window.directionsDisplay.setDirections({routes:[]});
+          window.directionsDisplay.setDirections({routes: []});
         });
         overviewButton.click(() => {
           overviewButton.addClass('active');
@@ -228,14 +240,46 @@ function setupEnvironment() {
           suppressInfoWindows: true
         });
 
+        const ctx = document.getElementById("chart").getContext('2d');
+        window.localChart = new Chart(ctx, {
+          type: 'line',
+          responsive: true,
+          data: {
+            datasets: [{
+              label: 'Fill level',
+              data: [80, 40],
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgba(255,99,132,1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero: true
+                }
+              }]
+            }
+          }
+        });
+
         return getAllContainers()
-          .then(putContainerMarkers);
+          .then(putContainerMarkers)
+          .then(getHistoryOfLocalContainer);
       });
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
   setupEnvironment();
 });
+
+function getHistoryOfLocalContainer() {
+  return historyHandler.getHistory("prototype_container1")
+    .then(historyArray => historyArray.map(historyEntry => {
+      addData(window.localChart, chartCounter++, historyEntry.fillLevel);
+    }));
+}
 
 function getColorForPercentage(pct) {
   if (pct > 50 && pct < 80) {
@@ -300,6 +344,14 @@ function calculateRoute() {
       window.alert('Directions request failed due to ' + status);
     }
   });
+}
+
+function addData(chart, label, data) {
+  chart.data.labels.push(label);
+  chart.data.datasets.forEach((dataset) => {
+    dataset.data.push(data);
+  });
+  chart.update();
 }
 
 
