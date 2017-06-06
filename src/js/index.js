@@ -56,6 +56,7 @@ function getNearContainers() {
         if (container.id === "prototype_container1") {
           if (container.lastUpdated !== lastTimeStamp) {
             lastTimeStamp = container.lastUpdated;
+            console.debug('data added', container.fillLevel);
             addData(window.localChart, chartCounter++, container.fillLevel);
           }
           const bar = $('#local-container');
@@ -78,6 +79,7 @@ function getAllContainers() {
         if (container.id === "prototype_container1") {
           if (container.lastUpdated !== lastTimeStamp) {
             lastTimeStamp = container.lastUpdated;
+            console.debug('data added', chartCounter, container.fillLevel);
             addData(window.localChart, chartCounter++, container.fillLevel);
           }
           const bar = $('#local-container');
@@ -247,7 +249,7 @@ function setupEnvironment() {
           data: {
             datasets: [{
               label: 'Fill level',
-              data: [80, 40],
+              data: [],
               backgroundColor: 'rgba(255, 99, 132, 0.2)',
               borderColor: 'rgba(255,99,132,1)',
               borderWidth: 1
@@ -264,9 +266,9 @@ function setupEnvironment() {
           }
         });
 
-        return getAllContainers()
+        return getHistoryOfLocalContainer()
+          .then(getAllContainers)
           .then(putContainerMarkers)
-          .then(getHistoryOfLocalContainer);
       });
   });
 }
